@@ -18,6 +18,10 @@ import {AngularFireModule} from "@angular/fire/compat";
 import {AngularFireAuthModule} from "@angular/fire/compat/auth";
 import {AngularFireStorageModule} from "@angular/fire/compat/storage";
 
+import {StoreModule} from "@ngrx/store";
+import {appReducers} from "./app.reducer";
+import {StoreDevtoolsModule} from "@ngrx/store-devtools";
+
 
 @NgModule({
   declarations: [
@@ -38,10 +42,21 @@ import {AngularFireStorageModule} from "@angular/fire/compat/storage";
     ReactiveFormsModule,
     AngularFireModule.initializeApp(environment.firebase),
     AngularFireAuthModule,
-    AngularFireStorageModule
+    AngularFireStorageModule,
     // provideFirebaseApp(() => initializeApp(environment.firebase)),
     // provideAuth(() => getAuth()),
     // provideFirestore(() => getFirestore())
+    StoreModule.forRoot(appReducers),
+    StoreDevtoolsModule.instrument({
+      maxAge: 25,
+      logOnly: false,
+      autoPause: true,
+      features: {
+        pause: false,
+        lock: true,
+        persist: true
+      }
+    })
   ],
   providers: [
   ],

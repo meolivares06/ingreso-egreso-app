@@ -3,6 +3,10 @@ import {FormBuilder, FormGroup, Validators} from "@angular/forms";
 import {AuthService} from "../../services/auth.service";
 import {Router} from "@angular/router";
 import Swal from "sweetalert2";
+import {Subscription} from "rxjs";
+import {AppState} from "../../app.reducer";
+import {isLoading, stopLoading} from "../../shared/ui.actions";
+import {Store} from "@ngrx/store";
 
 @Component({
   selector: 'app-register',
@@ -11,8 +15,9 @@ import Swal from "sweetalert2";
 })
 export class RegisterComponent implements OnInit {
   registroForm!: FormGroup;
-
-  constructor(private fb: FormBuilder, private authService: AuthService, private router: Router) {
+  subscriptions: Subscription[] = [];
+  cargando = false;
+  constructor(private fb: FormBuilder, private authService: AuthService, private router: Router, private _store: Store<AppState>) {
   }
 
   ngOnInit(): void {
@@ -22,21 +27,24 @@ export class RegisterComponent implements OnInit {
         password: ['', [Validators.required]],
       }
     );
-    console.log(this.registroForm.valid)
+    this.subscriptions.push(this._store.select('ui').subscribe((ui) => {
+      this.cargando = ui.isLoading;
+    }))
   }
 
   crearUsuario() {
     if(this.registroForm.valid) {
-      this.showLoading();
+      this._store.dispatch(isLoading());
       const {nombre, email, password} = this.registroForm.value;
 
       this.authService.crearUsuario(nombre, email, password).then(_ => {
-        this.hideLoading();
+        this._store.dispatch(stopLoading());
         this.router.navigate(['/'])
       })
         .catch(({message, name}) => {
-          this.hideLoading();
+          this._store.dispatch(stopLoading());
           Swal.fire({
+
             icon: 'error',
             title: name,
             text: message
@@ -56,5 +64,9 @@ export class RegisterComponent implements OnInit {
 
   hideLoading() {
     Swal.close();
+  }
+
+  ngOnDestroy(): void {
+    this.subscriptions.forEach(s => s.unsubscribe());
   }
 }
